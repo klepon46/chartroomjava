@@ -70,15 +70,10 @@ public class SignInActivity extends AppCompatActivity {
         String prefName = getResources().getString(R.string.sharedPrefKey);
         String key = getResources().getString(R.string.profileNameKey);
 
-        Log.d("CHAT_ROOM", "isProfileNameEmpty: " + prefName);
-
         SharedPreferences sharedRef =
                 this.getSharedPreferences(prefName, Context.MODE_PRIVATE);
 
         String profileName = sharedRef.getString(key, null);
-
-        Log.d("CHAT_ROOM", "isProfileNameEmpty: " + profileName);
-
 
         return profileName == null ? true : false;
     }

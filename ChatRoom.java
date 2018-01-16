@@ -25,40 +25,40 @@ import java.util.Map;
 
 public class ChatRoom extends AppCompatActivity {
 
-    private Button btn_send_msg;
-    private EditText input_msg;
-    private TextView chat_conversation;
-    private String user_name ,room_name;
+    private Button btnSendMsg;
+    private EditText inputMsg;
+    private TextView chatConverstation;
+    private String userName ,roomName;
     private DatabaseReference root;
-    private String temp_key;
-    private String chat_msg, chat_user_name;
+    private String tempKey;
+    private String chatMsg, chatUserName;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_chatroom);
-        btn_send_msg = (Button)findViewById(R.id.button);
-        input_msg = (EditText)findViewById(R.id.editText);
-        chat_conversation = (TextView)findViewById(R.id.textView);
-        user_name = getIntent().getExtras().get("user_name").toString();
-        room_name = getIntent().getExtras().get("room_name").toString();
-        setTitle("Room - "+room_name);
+        btnSendMsg = (Button)findViewById(R.id.button);
+        inputMsg = (EditText)findViewById(R.id.editText);
+        chatConverstation = (TextView)findViewById(R.id.textView);
+        userName = getIntent().getExtras().get("user_name").toString();
+        roomName = getIntent().getExtras().get("room_name").toString();
+        setTitle("Room - "+roomName);
 
-        root = FirebaseDatabase.getInstance().getReference().child(room_name);
+        root = FirebaseDatabase.getInstance().getReference().child(roomName);
 
-        btn_send_msg.setOnClickListener(new View.OnClickListener() {
+        btnSendMsg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 Map<String,Object> map = new HashMap<String, Object>();
-                temp_key = root.push().getKey();
+                tempKey = root.push().getKey();
                 root.updateChildren(map);
 
-                DatabaseReference message_root = root.child(temp_key);
+                DatabaseReference message_root = root.child(tempKey);
                 Map<String,Object> map2 = new HashMap<String, Object>();
-                map2.put("name",user_name);
-                map2.put("msg",input_msg.getText().toString());
+                map2.put("name",userName);
+                map2.put("msg",inputMsg.getText().toString());
 
                 message_root.updateChildren(map2);
 
@@ -99,10 +99,10 @@ public class ChatRoom extends AppCompatActivity {
         Iterator i = dataSnapshot.getChildren().iterator();
         while (i.hasNext())
         {
-            chat_msg = (String) ((DataSnapshot)i.next()).getValue();
-            chat_user_name = (String) ((DataSnapshot)i.next()).getValue();
+            chatMsg = (String) ((DataSnapshot)i.next()).getValue();
+            chatUserName = (String) ((DataSnapshot)i.next()).getValue();
 
-            chat_conversation.append(chat_user_name + " : "+chat_msg +"\n");
+            chatConverstation.append(chatUserName + " : "+chatMsg +"\n");
 
 
         }
