@@ -31,6 +31,13 @@ public class SignInActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
+        if(!isProfileNameEmpty()){
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        }
+
+
         List<AuthUI.IdpConfig> providers = Arrays.asList(
                 new AuthUI.IdpConfig.Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build());
 
@@ -39,19 +46,6 @@ public class SignInActivity extends AppCompatActivity {
                     .createSignInIntentBuilder()
                     .setAvailableProviders(providers)
                     .build(), SIGN_IN_RC);
-        } else if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-
-            if(isProfileNameEmpty()){
-                Intent intent = new Intent(this, ProfileActivity.class);
-                startActivity(intent);
-            }
-
-            if(!isProfileNameEmpty()){
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
-            }
-
-            finish();
         }
     }
 
