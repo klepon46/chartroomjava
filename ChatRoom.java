@@ -55,12 +55,12 @@ public class ChatRoom extends AppCompatActivity {
                 tempKey = root.push().getKey();
                 root.updateChildren(map);
 
-                DatabaseReference message_root = root.child(tempKey);
+                DatabaseReference messageRoot = root.child(tempKey);
                 Map<String,Object> map2 = new HashMap<String, Object>();
                 map2.put("name",userName);
                 map2.put("msg",inputMsg.getText().toString());
 
-                message_root.updateChildren(map2);
+                messageRoot.updateChildren(map2);
 
             }
         });
@@ -68,14 +68,12 @@ public class ChatRoom extends AppCompatActivity {
         root.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
-                append_chat_conversatin(dataSnapshot);
-
+                appendChatConversation(dataSnapshot);
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                append_chat_conversatin(dataSnapshot);
+                appendChatConversation(dataSnapshot);
             }
 
             @Override
@@ -95,7 +93,7 @@ public class ChatRoom extends AppCompatActivity {
         });
     }
 
-    private void append_chat_conversatin(DataSnapshot dataSnapshot) {
+    private void appendChatConversation(DataSnapshot dataSnapshot) {
         Iterator i = dataSnapshot.getChildren().iterator();
         while (i.hasNext())
         {
@@ -103,8 +101,6 @@ public class ChatRoom extends AppCompatActivity {
             chatUserName = (String) ((DataSnapshot)i.next()).getValue();
 
             chatConverstation.append(chatUserName + " : "+chatMsg +"\n");
-
-
         }
     }
 
