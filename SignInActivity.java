@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,22 +32,22 @@ public class SignInActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        if(!isProfileNameEmpty()){
+        if (!isProfileNameEmpty()) {
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
             finish();
         }
 
-
         List<AuthUI.IdpConfig> providers = Arrays.asList(
                 new AuthUI.IdpConfig.Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build());
-
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             startActivityForResult(AuthUI.getInstance()
                     .createSignInIntentBuilder()
                     .setAvailableProviders(providers)
                     .build(), SIGN_IN_RC);
         }
+
+
     }
 
     @Override
@@ -69,10 +70,14 @@ public class SignInActivity extends AppCompatActivity {
         String prefName = getResources().getString(R.string.sharedPrefKey);
         String key = getResources().getString(R.string.profileNameKey);
 
+        Log.d("CHAT_ROOM", "isProfileNameEmpty: " + prefName);
+
         SharedPreferences sharedRef =
-                this.getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+                this.getSharedPreferences(prefName, Context.MODE_PRIVATE);
 
         String profileName = sharedRef.getString(key, null);
+
+        Log.d("CHAT_ROOM", "isProfileNameEmpty: " + profileName);
 
 
         return profileName == null ? true : false;
