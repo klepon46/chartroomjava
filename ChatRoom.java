@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,16 +20,18 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import id.klepontech.chatroom.model.ChatModel;
+
 /**
  * Created by garya on 12/01/2018.
  */
 
-public class ChatRoom extends AppCompatActivity {
+public class ChatRoom extends AppCompatActivity implements View.OnClickListener{
 
     private Button btnSendMsg;
     private EditText inputMsg;
     private TextView chatConverstation;
-    private String userName ,roomName;
+    private String userName, roomName;
     private DatabaseReference root;
     private String tempKey;
     private String chatMsg, chatUserName;
@@ -36,34 +39,15 @@ public class ChatRoom extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_chatroom);
-        btnSendMsg = (Button)findViewById(R.id.button);
-        inputMsg = (EditText)findViewById(R.id.editText);
-        chatConverstation = (TextView)findViewById(R.id.textView);
+
+        bindView();
+
         userName = getIntent().getExtras().get("user_name").toString();
         roomName = getIntent().getExtras().get("room_name").toString();
-        setTitle("Room - "+roomName);
+        setTitle("Room - " + roomName);
 
         root = FirebaseDatabase.getInstance().getReference().child(roomName);
-
-        btnSendMsg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Map<String,Object> map = new HashMap<String, Object>();
-                tempKey = root.push().getKey();
-                root.updateChildren(map);
-
-                DatabaseReference messageRoot = root.child(tempKey);
-                Map<String,Object> map2 = new HashMap<String, Object>();
-                map2.put("name",userName);
-                map2.put("msg",inputMsg.getText().toString());
-
-                messageRoot.updateChildren(map2);
-
-            }
-        });
 
         root.addChildEventListener(new ChildEventListener() {
             @Override
@@ -95,13 +79,33 @@ public class ChatRoom extends AppCompatActivity {
 
     private void appendChatConversation(DataSnapshot dataSnapshot) {
         Iterator i = dataSnapshot.getChildren().iterator();
-        while (i.hasNext())
-        {
-            chatMsg = (String) ((DataSnapshot)i.next()).getValue();
-            chatUserName = (String) ((DataSnapshot)i.next()).getValue();
+        while (i.hasNext()) {
+            chatMsg = (String) ((DataSnapshot) i.next()).getValue();
+            chatUserName = (String) ((DataSnapshot) i.next()).getValue();
 
-            chatConverstation.append(chatUserName + " : "+chatMsg +"\n");
+            chatConverstation.append(chatUserName + " : " + chatMsg + "\n");
         }
     }
 
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.button :
+                sendMessage();
+                break;
+        }
+    }
+
+    public void sendMessage(){
+        ChatModel model = new ChatModel(userName, inputMsg.getText().toString());
+        root.push().setValue(model);
+    }
+
+    public void bindView(){
+        btnSendMsg = (Button) findViewById(R.id.button);
+        btnSendMsg.setOnClickListener(this);
+
+        inputMsg = (EditText) findViewById(R.id.editText);
+        chatConverstation = (TextView) findViewById(R.id.textView);
+    }
 }
