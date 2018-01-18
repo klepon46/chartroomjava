@@ -10,6 +10,7 @@ public class ChatModel {
 
     private String name;
     private String message;
+    private MapModel mapModel;
 
     public ChatModel(){
 
@@ -18,6 +19,10 @@ public class ChatModel {
     public ChatModel(String name, String message) {
         this.name = name;
         this.message = message;
+    }
+
+    public ChatModel(MapModel mapModel) {
+        this.mapModel = mapModel;
     }
 
     public String getName() {
@@ -34,5 +39,13 @@ public class ChatModel {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public MapModel getMapModel() {
+        return mapModel;
+    }
+
+    public void setMapModel(MapModel mapModel) {
+        this.mapModel = mapModel;
     }
 }
