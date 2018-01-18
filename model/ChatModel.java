@@ -21,7 +21,8 @@ public class ChatModel {
         this.message = message;
     }
 
-    public ChatModel(MapModel mapModel) {
+    public ChatModel(String name, MapModel mapModel) {
+        this.name = name;
         this.mapModel = mapModel;
     }
 

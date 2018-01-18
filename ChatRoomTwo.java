@@ -57,6 +57,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     private EditText etMessage;
 
     private String userName;
+    private String roomName;
 
 
     @Override
@@ -64,10 +65,11 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatroom_2);
 
+        userName = getIntent().getExtras().get("user_name").toString();
+        roomName = getIntent().getExtras().get("room_name").toString();
+
         bindViews();
         initializeFirebase();
-
-        userName = getIntent().getExtras().get("user_name").toString();
     }
 
     @Override
@@ -120,7 +122,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
                     LatLng latLng = place.getLatLng();
                     MapModel mapModel =
                             new MapModel(latLng.latitude+"",latLng.longitude+"");
-                    ChatModel chatModel = new ChatModel(mapModel);
+                    ChatModel chatModel = new ChatModel(userName,mapModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
                 }
             }
@@ -128,7 +130,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     }
 
     private void initializeFirebase() {
-        String roomName = getIntent().getExtras().get("room_name").toString();
+
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance()
                 .getReference().child(roomName);
 
@@ -139,7 +141,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
                         .setQuery(query, ChatModel.class)
                         .build();
 
-        adapter = new ChatAdapter(options);
+        adapter = new ChatAdapter(options,userName);
 
         rvListMessage.setLayoutManager(new LinearLayoutManager(this));
         rvListMessage.setAdapter(adapter);
