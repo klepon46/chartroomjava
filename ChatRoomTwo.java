@@ -7,10 +7,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -52,6 +55,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     private RecyclerView rvListMessage;
     private LinearLayoutManager mLinearLayoutManager;
     private Button btSendMessage;
+    private ImageButton btPopupChatMenu;
     private View contentRoot;
     private ChatAdapter adapter;
     private EditText etMessage;
@@ -89,8 +93,11 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
         switch (view.getId()) {
             case R.id.btnSendMessage:
 
-//                sendMessage();
-                sendLocationIntent();
+                sendMessage();
+                //sendLocationIntent();
+                break;
+            case R.id.btnPopupMenu:
+                showPopupMenu();
                 break;
         }
     }
@@ -99,6 +106,28 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
         ChatModel model = new ChatModel(userName, etMessage.getText().toString());
         mFirebaseDatabaseReference.push().setValue(model);
         etMessage.setText(null);
+    }
+
+    private void showPopupMenu() {
+        PopupMenu popupMenu = new PopupMenu(ChatRoomTwo.this, btPopupChatMenu);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_chat, popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+
+                switch (menuItem.getItemId()) {
+                    case R.id.sendPhotoGallery:
+                        break;
+                    case R.id.sendLocation:
+                        sendLocationIntent();
+                        break;
+                }
+
+                return false;
+            }
+        });
+
+        popupMenu.show();
     }
 
     private void sendLocationIntent() {
@@ -115,14 +144,14 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == 101){
-            if(resultCode == RESULT_OK){
-                Place place = PlacePicker.getPlace(this,data);
-                if(place != null){
+        if (requestCode == 101) {
+            if (resultCode == RESULT_OK) {
+                Place place = PlacePicker.getPlace(this, data);
+                if (place != null) {
                     LatLng latLng = place.getLatLng();
                     MapModel mapModel =
-                            new MapModel(latLng.latitude+"",latLng.longitude+"");
-                    ChatModel chatModel = new ChatModel(userName,mapModel);
+                            new MapModel(latLng.latitude + "", latLng.longitude + "");
+                    ChatModel chatModel = new ChatModel(userName, mapModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
                 }
             }
@@ -141,7 +170,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
                         .setQuery(query, ChatModel.class)
                         .build();
 
-        adapter = new ChatAdapter(options,userName);
+        adapter = new ChatAdapter(options, userName);
 
         rvListMessage.setLayoutManager(new LinearLayoutManager(this));
         rvListMessage.setAdapter(adapter);
@@ -153,6 +182,9 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
 
         btSendMessage = (Button) findViewById(R.id.btnSendMessage);
         btSendMessage.setOnClickListener(this);
+
+        btPopupChatMenu = findViewById(R.id.btnPopupMenu);
+        btPopupChatMenu.setOnClickListener(this);
 
         etMessage = findViewById(R.id.etMessage);
 
