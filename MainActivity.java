@@ -1,5 +1,6 @@
 package id.klepontech.chatroom;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference root = database.getReference().getRoot();
     private ArrayAdapter<String> arrayAdapter;
     private ArrayList<String> rooms = new ArrayList();
+    private ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
                 android.R.layout.simple_list_item_1, rooms);
         listView.setAdapter(arrayAdapter);
 
+        showLoadingDialog();
         root.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -66,14 +69,15 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        dismissDialog();
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                Intent I = new Intent(getApplicationContext(),ChatRoomTwo.class);
-                I.putExtra("room_name",((TextView)view).getText().toString());
-                I.putExtra("user_name",name);
+                Intent I = new Intent(getApplicationContext(), ChatRoomTwo.class);
+                I.putExtra("room_name", ((TextView) view).getText().toString());
+                I.putExtra("user_name", name);
                 startActivity(I);
             }
         });
@@ -81,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private String getCurrentProfileName(){
+    private String getCurrentProfileName() {
 
         String prefName = getResources().getString(R.string.sharedPrefKey);
         String key = getResources().getString(R.string.profileNameKey);
@@ -92,6 +96,22 @@ public class MainActivity extends AppCompatActivity {
         String profileName = sharedRef.getString(key, null);
 
         return profileName;
+    }
+
+    public void showLoadingDialog() {
+        if (dialog == null) {
+            dialog = new ProgressDialog(this);
+            dialog.setTitle("Loading");
+            dialog.setTitle("Loading...");
+        }
+
+        dialog.show();
+    }
+
+    public void dismissDialog() {
+        if (dialog != null && dialog.isShowing()) {
+            dialog.dismiss();
+        }
     }
 
 }

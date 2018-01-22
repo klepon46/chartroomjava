@@ -6,6 +6,11 @@ package id.klepontech.chatroom.Utility;
 
 public class Util {
 
+    public static final String URL_STORAGE_REFERENCE = "gs://chatroom-303e6.appspot.com";
+    public static final String FOLDER_STORAGE_IMG = "images";
+
+
+
     public static String local(String lat, String lot){
         return "https://maps.googleapis.com/maps/api/staticmap?center="+lat+","
                 +lot+"&zoom=18&size=280x280&markers=color:red|"

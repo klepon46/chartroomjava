@@ -97,7 +97,7 @@ public class ChatRoom extends AppCompatActivity implements View.OnClickListener{
     }
 
     public void sendMessage(){
-        ChatModel model = new ChatModel(userName, inputMsg.getText().toString());
+        ChatModel model = new ChatModel(userName, inputMsg.getText().toString(), "");
         root.push().setValue(model);
     }
 

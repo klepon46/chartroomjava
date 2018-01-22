@@ -38,12 +38,18 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
     protected void onBindViewHolder(ChatViewHolder holder, int position, ChatModel model) {
         holder.setTxtUsername(model.getName());
         holder.setTxtMessage(model.getMessage());
+        holder.setTvTimestamp(model.getTimeStamp());
         holder.tvIsLocation(View.GONE);
 
         if (model.getMapModel() != null) {
             holder.setIvChatPhoto(Util.local(model.getMapModel().getLatitude()
                     , model.getMapModel().getLongitude()));
             holder.tvIsLocation(View.VISIBLE);
+        }
+
+        if (model.getFileModel() != null) {
+            holder.setIvChatPhoto(model.getFileModel().getUrl_file());
+            holder.tvIsLocation(View.GONE);
         }
 
     }
@@ -82,6 +88,13 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
             } else {
                 return LEFT_MSG_IMG;
             }
+
+        } else if (model.getFileModel() != null) {
+            if(modelUserName.equals(userName)){
+                return RIGHT_MSG_IMG;
+            }else{
+                return LEFT_MSG_IMG;
+            }
         } else {
             if (modelUserName.equals(userName)) {
                 return RIGHT_MSG;
@@ -91,9 +104,14 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
         }
     }
 
+    private CharSequence converteTimestamp(String ms) {
+        return DateUtils.getRelativeTimeSpanString(Long.parseLong(ms),
+                System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS);
+    }
+
     public class ChatViewHolder extends RecyclerView.ViewHolder {
 
-        TextView tvUsername, tvMessage, tvLocation;
+        TextView tvUsername, tvMessage, tvLocation, tvTimeStamp;
         ImageView ivChatPhoto;
 
         public ChatViewHolder(View itemView) {
@@ -102,7 +120,7 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
             tvUsername = itemView.findViewById(R.id.txtUserName);
             tvMessage = itemView.findViewById(R.id.txtMessage);
 
-//            tvTimeStamp = (TextView) itemView.findViewById(R.id.timestamp);
+            tvTimeStamp = (TextView) itemView.findViewById(R.id.timestamp);
             tvLocation = (TextView) itemView.findViewById(R.id.tvLocation);
             ivChatPhoto = (ImageView) itemView.findViewById(R.id.img_chat);
         }
@@ -119,10 +137,10 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
         }
 
 
-//        public void setTvTimestamp(String timestamp) {
-//            if (tvTimeStamp == null) return;
-//            tvTimeStamp.setText(converteTimestamp(timestamp));
-//        }
+        public void setTvTimestamp(String timestamp) {
+            if (tvTimeStamp == null) return;
+            tvTimeStamp.setText(converteTimestamp(timestamp));
+        }
 
         public void setIvChatPhoto(String url) {
             if (ivChatPhoto == null) return;
@@ -137,10 +155,6 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
             if (tvLocation == null) return;
             tvLocation.setVisibility(visible);
         }
-    }
-
-    private CharSequence converteTimestamp(String mileSegundos) {
-        return DateUtils.getRelativeTimeSpanString(Long.parseLong(mileSegundos), System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS);
     }
 
 }

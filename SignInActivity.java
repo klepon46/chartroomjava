@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,22 +31,46 @@ public class SignInActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        if (!isProfileNameEmpty()) {
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-            finish();
 
-        } else {
-
-            List<AuthUI.IdpConfig> providers = Arrays.asList(
-                    new AuthUI.IdpConfig.Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build());
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            List<AuthUI.IdpConfig> providers = Arrays.asList(new AuthUI.IdpConfig
+                    .Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build());
 
             startActivityForResult(AuthUI.getInstance()
                     .createSignInIntentBuilder()
                     .setAvailableProviders(providers)
                     .build(), SIGN_IN_RC);
+        }else{
+
+            if (!isProfileNameEmpty()) {
+                Intent intent = new Intent(this, MainActivity.class);
+                startActivity(intent);
+                finish();
+            }else{
+                Intent intent = new Intent(this, ProfileActivity.class);
+                startActivity(intent);
+                finish();
+            }
 
         }
+
+
+//        if (!isProfileNameEmpty()) {
+//            Intent intent = new Intent(this, MainActivity.class);
+//            startActivity(intent);
+//            finish();
+//
+//        } else {
+//
+//            List<AuthUI.IdpConfig> providers = Arrays.asList(
+//                    new AuthUI.IdpConfig.Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build());
+//
+//            startActivityForResult(AuthUI.getInstance()
+//                    .createSignInIntentBuilder()
+//                    .setAvailableProviders(providers)
+//                    .build(), SIGN_IN_RC);
+//
+//        }
     }
 
     @Override
