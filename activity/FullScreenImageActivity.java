@@ -6,7 +6,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -23,7 +22,6 @@ import id.klepontech.chatroom.view.TouchImageView;
 public class FullScreenImageActivity extends AppCompatActivity {
 
     private TouchImageView mImageView;
-    private TextView tvUser;
     private ProgressDialog progressDialog;
 
     @Override
