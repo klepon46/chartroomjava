@@ -1,7 +1,5 @@
 package id.klepontech.chatroom.model;
 
-import id.klepontech.chatroom.ChatRoom;
-
 /**
  * Created by garya on 17/01/2018.
  */

@@ -30,6 +30,7 @@ public class FullScreenImageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_full_screen_image);
+
         bindViews();
     }
 
@@ -59,19 +60,13 @@ public class FullScreenImageActivity extends AppCompatActivity {
     private void bindViews() {
         progressDialog = new ProgressDialog(this);
         mImageView = (TouchImageView) findViewById(R.id.imageView);
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
-//        getSupportActionBar().setDisplayShowTitleEnabled(false);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        tvUser = (TextView) toolbar.findViewById(R.id.title);
     }
 
     private void setValues() {
-        String nameUser, urlPhotoClick;
-        nameUser = getIntent().getStringExtra("nameUser");
-        urlPhotoClick = getIntent().getStringExtra("urlPhotoClick");
-        //tvUser.setText(nameUser); // Name
+        String urlPhotoClick = getIntent().getStringExtra("urlPhotoClick");
+        String roomName = getIntent().getStringExtra("roomName");
 
+        getSupportActionBar().setTitle(roomName);
 
         Glide.with(this).load(urlPhotoClick).asBitmap().override(640, 640)
                 .fitCenter().into(new SimpleTarget<Bitmap>() {

@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                Intent I = new Intent(getApplicationContext(), ChatRoomTwo.class);
+                Intent I = new Intent(getApplicationContext(), ChatRoomActivity.class);
                 I.putExtra("room_name", ((TextView) view).getText().toString());
                 I.putExtra("user_name", name);
                 startActivity(I);

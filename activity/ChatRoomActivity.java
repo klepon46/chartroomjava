@@ -55,7 +55,7 @@ import id.klepontech.chatroom.model.MapModel;
  * Created by garya on 17/01/2018.
  */
 
-public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListener,
+public class ChatRoomActivity extends AppCompatActivity implements View.OnClickListener,
         ClickListenerChatFirebase {
 
     static final String TAG = MainActivity.class.getSimpleName();
@@ -92,12 +92,13 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chatroom_2);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        setContentView(R.layout.activity_chatroom);
 
         userName = getIntent().getExtras().get("user_name").toString();
         roomName = getIntent().getExtras().get("room_name").toString();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        setTitle(roomName);
 
         if(Util.isConnectedToInternet(this)){
             bindViews();
@@ -147,7 +148,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     }
 
     private void showPopupMenu() {
-        PopupMenu popupMenu = new PopupMenu(ChatRoomTwo.this, btPopupChatMenu);
+        PopupMenu popupMenu = new PopupMenu(ChatRoomActivity.this, btPopupChatMenu);
         popupMenu.getMenuInflater().inflate(R.menu.menu_chat, popupMenu.getMenu());
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
@@ -191,13 +192,13 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
 
     public void verifyStoragePermissions() {
         // Check if we have write permission
-        int permission = ActivityCompat.checkSelfPermission(ChatRoomTwo.this,
+        int permission = ActivityCompat.checkSelfPermission(ChatRoomActivity.this,
                 android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         if (permission != PackageManager.PERMISSION_GRANTED) {
             // We don't have permission so prompt the user
             ActivityCompat.requestPermissions(
-                    ChatRoomTwo.this,
+                    ChatRoomActivity.this,
                     PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE
             );
@@ -210,9 +211,10 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     private void photoCameraIntent(){
         String nomeFoto = DateFormat.format("yyyy-MM-dd_hhmmss", new Date()).toString();
         filePathImageCamera = new File(Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), nomeFoto+"camera.jpg");
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                nomeFoto+"camera.jpg");
         Intent it = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        Uri photoURI = FileProvider.getUriForFile(ChatRoomTwo.this,
+        Uri photoURI = FileProvider.getUriForFile(ChatRoomActivity.this,
                 BuildConfig.APPLICATION_ID + ".provider",
                 filePathImageCamera);
         it.putExtra(MediaStore.EXTRA_OUTPUT,photoURI);
@@ -292,7 +294,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
 
     private void sendFileFirebase(StorageReference storageReference, final File file) {
         if (storageReference != null){
-            Uri photoURI = FileProvider.getUriForFile(ChatRoomTwo.this,
+            Uri photoURI = FileProvider.getUriForFile(ChatRoomActivity.this,
                     BuildConfig.APPLICATION_ID + ".provider",
                     file);
             UploadTask uploadTask = storageReference.putFile(photoURI);
@@ -324,6 +326,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
         Intent intent = new Intent(this,FullScreenImageActivity.class);
         intent.putExtra("nameUser",nameUser);
         intent.putExtra("urlPhotoClick",urlPhotoClick);
+        intent.putExtra("roomName", roomName);
         startActivity(intent);
     }
 
