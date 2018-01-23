@@ -1,10 +1,14 @@
 package id.klepontech.chatroom;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -46,6 +50,7 @@ import java.util.Date;
 
 import id.klepontech.chatroom.Utility.Util;
 import id.klepontech.chatroom.adapter.ChatAdapter;
+import id.klepontech.chatroom.adapter.ClickListenerChatFirebase;
 import id.klepontech.chatroom.model.ChatModel;
 import id.klepontech.chatroom.model.FileModel;
 import id.klepontech.chatroom.model.MapModel;
@@ -54,7 +59,8 @@ import id.klepontech.chatroom.model.MapModel;
  * Created by garya on 17/01/2018.
  */
 
-public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListener {
+public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListener,
+        ClickListenerChatFirebase {
 
     static final String TAG = MainActivity.class.getSimpleName();
     static final String CHAT_REFERENCE = "chatmodel";
@@ -79,11 +85,21 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     private String userName;
     private String roomName;
 
+    private File filePathImageCamera;
+
+    // Storage Permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatroom_2);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         userName = getIntent().getExtras().get("user_name").toString();
         roomName = getIntent().getExtras().get("room_name").toString();
@@ -117,6 +133,10 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     }
 
     private void sendMessage() {
+        if(etMessage.getText().toString().isEmpty() || etMessage.getText() == null){
+            return;
+        }
+
         String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
         ChatModel model = new ChatModel(userName, etMessage.getText().toString(), timeStamp);
         mFirebaseDatabaseReference.push().setValue(model);
@@ -131,6 +151,9 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
             public boolean onMenuItemClick(MenuItem menuItem) {
 
                 switch (menuItem.getItemId()) {
+                    case R.id.sendPhotoCamera:
+                        verifyStoragePermissions();
+                        break;
                     case R.id.sendPhotoGallery:
                         photoGalleryIntent();
                         break;
@@ -163,9 +186,43 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
                 getString(R.string.select_picture_title)), 102);
     }
 
+    public void verifyStoragePermissions() {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(ChatRoomTwo.this,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    ChatRoomTwo.this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }else{
+            // we already have permission, lets go ahead and call camera intent
+            photoCameraIntent();
+        }
+    }
+
+    private void photoCameraIntent(){
+        String nomeFoto = DateFormat.format("yyyy-MM-dd_hhmmss", new Date()).toString();
+        filePathImageCamera = new File(Environment
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), nomeFoto+"camera.jpg");
+        Intent it = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        Uri photoURI = FileProvider.getUriForFile(ChatRoomTwo.this,
+                BuildConfig.APPLICATION_ID + ".provider",
+                filePathImageCamera);
+        it.putExtra(MediaStore.EXTRA_OUTPUT,photoURI);
+        startActivityForResult(it, 103);
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        StorageReference storageRef = storage.getReferenceFromUrl(Util.URL_STORAGE_REFERENCE)
+                .child(Util.FOLDER_STORAGE_IMG);
 
         if (requestCode == 101) {
             if (resultCode == RESULT_OK) {
@@ -183,9 +240,6 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
 
         if (requestCode == 102) {
             if (resultCode == RESULT_OK) {
-                StorageReference storageRef = storage.getReferenceFromUrl(Util.URL_STORAGE_REFERENCE)
-                        .child(Util.FOLDER_STORAGE_IMG);
-
                 Uri selectedImageUri = data.getData();
                 if (selectedImageUri != null) {
                     sendFileFirebase(storageRef, selectedImageUri);
@@ -193,7 +247,16 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
                     //URI IS NULL
                 }
             }
+        }
 
+        if(requestCode == 103){
+            if(resultCode == RESULT_OK){
+                if(filePathImageCamera != null && filePathImageCamera.exists()){
+                    StorageReference imagCameraRef =
+                            storageRef.child(filePathImageCamera.getName()+"_camera");
+                    sendFileFirebase(imagCameraRef,filePathImageCamera);
+                }
+            }
         }
     }
 
@@ -224,6 +287,50 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
 
     }
 
+    private void sendFileFirebase(StorageReference storageReference, final File file) {
+        if (storageReference != null){
+            Uri photoURI = FileProvider.getUriForFile(ChatRoomTwo.this,
+                    BuildConfig.APPLICATION_ID + ".provider",
+                    file);
+            UploadTask uploadTask = storageReference.putFile(photoURI);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.e(TAG,"onFailure sendFileFirebase "+e.getMessage());
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    Log.i(TAG,"onSuccess sendFileFirebase");
+                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                    String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
+                    FileModel fileModel = new FileModel("img",downloadUrl.toString()
+                            ,file.getName(),file.length()+"");
+                    ChatModel chatModel = new ChatModel(userName, timeStamp, fileModel);
+                    mFirebaseDatabaseReference.push().setValue(chatModel);
+                }
+            });
+        }else{
+            //IS NULL
+        }
+
+    }
+
+    @Override
+    public void clickImageChat(View view, int position, String nameUser, String urlPhotoUser, String urlPhotoClick) {
+        Intent intent = new Intent(this,FullScreenImageActivity.class);
+        intent.putExtra("nameUser",nameUser);
+        intent.putExtra("urlPhotoClick",urlPhotoClick);
+        startActivity(intent);
+    }
+
+    @Override
+    public void clickImageMapChat(View view, int position, String latitude, String longitude) {
+        String uri = String.format("geo:%s,%s?z=17&q=%s,%s", latitude,longitude,latitude,longitude);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        startActivity(intent);
+    }
+
     private void initializeFirebase() {
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance()
@@ -236,7 +343,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
                         .setQuery(query, ChatModel.class)
                         .build();
 
-        adapter = new ChatAdapter(options, userName);
+        adapter = new ChatAdapter(options, userName, this);
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {

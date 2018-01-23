@@ -27,11 +27,14 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
     private static final int RIGHT_MSG_IMG = 2;
     private static final int LEFT_MSG_IMG = 3;
 
+    private ClickListenerChatFirebase mClickListenerChatFirebase;
     private String userName;
 
-    public ChatAdapter(FirebaseRecyclerOptions<ChatModel> options, String userName) {
+    public ChatAdapter(FirebaseRecyclerOptions<ChatModel> options, String userName,
+                       ClickListenerChatFirebase mClickListenerChatFirebase) {
         super(options);
         this.userName = userName;
+        this.mClickListenerChatFirebase = mClickListenerChatFirebase;
     }
 
     @Override
@@ -109,7 +112,7 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
                 System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS);
     }
 
-    public class ChatViewHolder extends RecyclerView.ViewHolder {
+    public class ChatViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener{
 
         TextView tvUsername, tvMessage, tvLocation, tvTimeStamp;
         ImageView ivChatPhoto;
@@ -148,12 +151,25 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
                     .override(100, 100)
                     .fitCenter()
                     .into(ivChatPhoto);
-            //ivChatPhoto.setOnClickListener(this);
+            ivChatPhoto.setOnClickListener(this);
         }
 
         public void tvIsLocation(int visible) {
             if (tvLocation == null) return;
             tvLocation.setVisibility(visible);
+        }
+
+        @Override
+        public void onClick(View view) {
+            ChatModel model = getItem(getAdapterPosition());
+            if(model.getFileModel() != null){
+                mClickListenerChatFirebase.clickImageChat(view, getAdapterPosition(),
+                        userName,"", model.getFileModel().getUrl_file());
+            }else{
+                mClickListenerChatFirebase.clickImageMapChat(view, getAdapterPosition(),
+                        model.getMapModel().getLatitude(), model.getMapModel().getLongitude());
+            }
+
         }
     }
 
