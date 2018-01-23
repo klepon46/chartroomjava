@@ -1,4 +1,4 @@
-package id.klepontech.chatroom;
+package id.klepontech.chatroom.activity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +12,8 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Arrays;
 import java.util.List;
+
+import id.klepontech.chatroom.R;
 
 /**
  * Created by garya on 15/01/2018.

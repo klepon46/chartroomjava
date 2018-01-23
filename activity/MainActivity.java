@@ -1,4 +1,4 @@
-package id.klepontech.chatroom;
+package id.klepontech.chatroom.activity;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import id.klepontech.chatroom.R;
 
 public class MainActivity extends AppCompatActivity {
 

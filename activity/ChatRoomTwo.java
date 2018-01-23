@@ -1,4 +1,4 @@
-package id.klepontech.chatroom;
+package id.klepontech.chatroom.activity;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -20,26 +20,20 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -48,6 +42,8 @@ import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 
+import id.klepontech.chatroom.BuildConfig;
+import id.klepontech.chatroom.R;
 import id.klepontech.chatroom.Utility.Util;
 import id.klepontech.chatroom.adapter.ChatAdapter;
 import id.klepontech.chatroom.adapter.ClickListenerChatFirebase;
@@ -63,12 +59,12 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
         ClickListenerChatFirebase {
 
     static final String TAG = MainActivity.class.getSimpleName();
-    static final String CHAT_REFERENCE = "chatmodel";
+
+    private static final int LOCATION_INTENT_RC = 101;
+    private static final int IMAGE_GALLERY_INTENT_RC = 102;
+    private static final int CAMERA_INTENT_RC = 103;
 
     //Firebase and GoogleApiClient
-    private FirebaseAuth mFirebaseAuth;
-    private FirebaseUser mFirebaseUser;
-    private GoogleApiClient mGoogleApiClient;
     private DatabaseReference mFirebaseDatabaseReference;
     FirebaseStorage storage = FirebaseStorage.getInstance();
 
@@ -78,7 +74,6 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     private LinearLayoutManager mLinearLayoutManager;
     private Button btSendMessage;
     private ImageButton btPopupChatMenu;
-    private View contentRoot;
     private ChatAdapter adapter;
     private EditText etMessage;
 
@@ -104,8 +99,16 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
         userName = getIntent().getExtras().get("user_name").toString();
         roomName = getIntent().getExtras().get("room_name").toString();
 
-        bindViews();
-        initializeFirebase();
+        if(Util.isConnectedToInternet(this)){
+            bindViews();
+            initializeFirebase();
+        }else{
+            Toast.makeText(this,"You dont have internet Connection", Toast.LENGTH_SHORT)
+                    .show();
+            finish();
+        }
+
+
     }
 
     @Override
@@ -172,7 +175,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
     private void sendLocationIntent() {
         PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
         try {
-            startActivityForResult(builder.build(this), 101);
+            startActivityForResult(builder.build(this), LOCATION_INTENT_RC);
         } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
             e.printStackTrace();
         }
@@ -183,7 +186,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent,
-                getString(R.string.select_picture_title)), 102);
+                getString(R.string.select_picture_title)), IMAGE_GALLERY_INTENT_RC);
     }
 
     public void verifyStoragePermissions() {
@@ -213,7 +216,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
                 BuildConfig.APPLICATION_ID + ".provider",
                 filePathImageCamera);
         it.putExtra(MediaStore.EXTRA_OUTPUT,photoURI);
-        startActivityForResult(it, 103);
+        startActivityForResult(it, CAMERA_INTENT_RC);
     }
 
 
@@ -224,7 +227,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
         StorageReference storageRef = storage.getReferenceFromUrl(Util.URL_STORAGE_REFERENCE)
                 .child(Util.FOLDER_STORAGE_IMG);
 
-        if (requestCode == 101) {
+        if (requestCode == LOCATION_INTENT_RC) {
             if (resultCode == RESULT_OK) {
                 Place place = PlacePicker.getPlace(this, data);
                 if (place != null) {
@@ -238,7 +241,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
             }
         }
 
-        if (requestCode == 102) {
+        if (requestCode == IMAGE_GALLERY_INTENT_RC) {
             if (resultCode == RESULT_OK) {
                 Uri selectedImageUri = data.getData();
                 if (selectedImageUri != null) {
@@ -249,7 +252,7 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
             }
         }
 
-        if(requestCode == 103){
+        if(requestCode == CAMERA_INTENT_RC){
             if(resultCode == RESULT_OK){
                 if(filePathImageCamera != null && filePathImageCamera.exists()){
                     StorageReference imagCameraRef =
@@ -364,8 +367,6 @@ public class ChatRoomTwo extends AppCompatActivity implements View.OnClickListen
 
 
     private void bindViews() {
-        contentRoot = findViewById(R.id.contentRoot);
-
         btSendMessage = (Button) findViewById(R.id.btnSendMessage);
         btSendMessage.setOnClickListener(this);
 
