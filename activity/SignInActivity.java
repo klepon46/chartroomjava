@@ -45,7 +45,7 @@ public class SignInActivity extends AppCompatActivity {
         }else{
 
             if (!isProfileNameEmpty()) {
-                Intent intent = new Intent(this, MainActivity.class);
+                Intent intent = new Intent(this, ProfileActivity.class);
                 startActivity(intent);
                 finish();
             }else{
@@ -56,23 +56,6 @@ public class SignInActivity extends AppCompatActivity {
 
         }
 
-
-//        if (!isProfileNameEmpty()) {
-//            Intent intent = new Intent(this, MainActivity.class);
-//            startActivity(intent);
-//            finish();
-//
-//        } else {
-//
-//            List<AuthUI.IdpConfig> providers = Arrays.asList(
-//                    new AuthUI.IdpConfig.Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build());
-//
-//            startActivityForResult(AuthUI.getInstance()
-//                    .createSignInIntentBuilder()
-//                    .setAvailableProviders(providers)
-//                    .build(), SIGN_IN_RC);
-//
-//        }
     }
 
     @Override
