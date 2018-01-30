@@ -1,6 +1,8 @@
 package id.klepontech.chatroom.activity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -100,11 +102,11 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
 
         setTitle(roomName);
 
-        if(Util.isConnectedToInternet(this)){
+        if (Util.isConnectedToInternet(this)) {
             bindViews();
             initializeFirebase();
-        }else{
-            Toast.makeText(this,"You dont have internet Connection", Toast.LENGTH_SHORT)
+        } else {
+            Toast.makeText(this, "You dont have internet Connection", Toast.LENGTH_SHORT)
                     .show();
             finish();
         }
@@ -137,12 +139,15 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void sendMessage() {
-        if(etMessage.getText().toString().isEmpty() || etMessage.getText() == null){
+        if (etMessage.getText().toString().isEmpty() || etMessage.getText() == null) {
             return;
         }
 
+        String urlPhoto = getProfileUrl();
         String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
-        ChatModel model = new ChatModel(userName, etMessage.getText().toString(), timeStamp);
+        ChatModel model = new ChatModel(userName, etMessage.getText().toString()
+                , urlPhoto, timeStamp);
+
         mFirebaseDatabaseReference.push().setValue(model);
         etMessage.setText(null);
     }
@@ -202,22 +207,22 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                     PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE
             );
-        }else{
+        } else {
             // we already have permission, lets go ahead and call camera intent
             photoCameraIntent();
         }
     }
 
-    private void photoCameraIntent(){
+    private void photoCameraIntent() {
         String nomeFoto = DateFormat.format("yyyy-MM-dd_hhmmss", new Date()).toString();
         filePathImageCamera = new File(Environment
                 .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                nomeFoto+"camera.jpg");
+                nomeFoto + "camera.jpg");
         Intent it = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         Uri photoURI = FileProvider.getUriForFile(ChatRoomActivity.this,
                 BuildConfig.APPLICATION_ID + ".provider",
                 filePathImageCamera);
-        it.putExtra(MediaStore.EXTRA_OUTPUT,photoURI);
+        it.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
         startActivityForResult(it, CAMERA_INTENT_RC);
     }
 
@@ -235,9 +240,12 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                 if (place != null) {
                     String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
                     LatLng latLng = place.getLatLng();
+
                     MapModel mapModel =
                             new MapModel(latLng.latitude + "", latLng.longitude + "");
-                    ChatModel chatModel = new ChatModel(userName, timeStamp, mapModel);
+
+                    ChatModel chatModel =
+                            new ChatModel(userName, getProfileUrl(), timeStamp, mapModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
                 }
             }
@@ -254,12 +262,12 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
             }
         }
 
-        if(requestCode == CAMERA_INTENT_RC){
-            if(resultCode == RESULT_OK){
-                if(filePathImageCamera != null && filePathImageCamera.exists()){
+        if (requestCode == CAMERA_INTENT_RC) {
+            if (resultCode == RESULT_OK) {
+                if (filePathImageCamera != null && filePathImageCamera.exists()) {
                     StorageReference imagCameraRef =
-                            storageRef.child(filePathImageCamera.getName()+"_camera");
-                    sendFileFirebase(imagCameraRef,filePathImageCamera);
+                            storageRef.child(filePathImageCamera.getName() + "_camera");
+                    sendFileFirebase(imagCameraRef, filePathImageCamera);
                 }
             }
         }
@@ -282,7 +290,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                     String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
                     Uri downloadUrl = taskSnapshot.getDownloadUrl();
                     FileModel fileModel = new FileModel("img", downloadUrl.toString(), name, "");
-                    ChatModel chatModel = new ChatModel(userName, timeStamp, fileModel);
+                    ChatModel chatModel = new ChatModel(userName,getProfileUrl(), timeStamp, fileModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
                 }
             });
@@ -293,7 +301,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void sendFileFirebase(StorageReference storageReference, final File file) {
-        if (storageReference != null){
+        if (storageReference != null) {
             Uri photoURI = FileProvider.getUriForFile(ChatRoomActivity.this,
                     BuildConfig.APPLICATION_ID + ".provider",
                     file);
@@ -301,21 +309,23 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
             uploadTask.addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Log.e(TAG,"onFailure sendFileFirebase "+e.getMessage());
+                    Log.e(TAG, "onFailure sendFileFirebase " + e.getMessage());
                 }
             }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Log.i(TAG,"onSuccess sendFileFirebase");
+                    Log.i(TAG, "onSuccess sendFileFirebase");
+
                     Uri downloadUrl = taskSnapshot.getDownloadUrl();
                     String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
-                    FileModel fileModel = new FileModel("img",downloadUrl.toString()
-                            ,file.getName(),file.length()+"");
-                    ChatModel chatModel = new ChatModel(userName, timeStamp, fileModel);
+                    FileModel fileModel = new FileModel("img", downloadUrl.toString()
+                            , file.getName(), file.length() + "");
+
+                    ChatModel chatModel = new ChatModel(userName, getProfileUrl(), timeStamp, fileModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
                 }
             });
-        }else{
+        } else {
             //IS NULL
         }
 
@@ -323,16 +333,16 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
 
     @Override
     public void clickImageChat(View view, int position, String nameUser, String urlPhotoUser, String urlPhotoClick) {
-        Intent intent = new Intent(this,FullScreenImageActivity.class);
-        intent.putExtra("nameUser",nameUser);
-        intent.putExtra("urlPhotoClick",urlPhotoClick);
+        Intent intent = new Intent(this, FullScreenImageActivity.class);
+        intent.putExtra("nameUser", nameUser);
+        intent.putExtra("urlPhotoClick", urlPhotoClick);
         intent.putExtra("roomName", roomName);
         startActivity(intent);
     }
 
     @Override
     public void clickImageMapChat(View view, int position, String latitude, String longitude) {
-        String uri = String.format("geo:%s,%s?z=17&q=%s,%s", latitude,longitude,latitude,longitude);
+        String uri = String.format("geo:%s,%s?z=17&q=%s,%s", latitude, longitude, latitude, longitude);
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
         startActivity(intent);
     }
@@ -384,5 +394,16 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         mLinearLayoutManager.setStackFromEnd(true);
     }
 
+    private String getProfileUrl() {
 
+        String prefName = getResources().getString(R.string.sharedPrefKey);
+        String key = getResources().getString(R.string.profileUrlPhotoKey);
+
+        SharedPreferences sharedRef =
+                this.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+
+        String profileName = sharedRef.getString(key, null);
+
+        return profileName;
+    }
 }

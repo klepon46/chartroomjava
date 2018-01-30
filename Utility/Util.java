@@ -11,6 +11,7 @@ public class Util {
 
     public static final String URL_STORAGE_REFERENCE = "gs://chatroom-303e6.appspot.com";
     public static final String FOLDER_STORAGE_IMG = "images";
+    public static final String FOLDER_STORAGE_IMG_PROFILE = "profiles";
 
     public static boolean isConnectedToInternet(Context context){
         boolean isConnected;

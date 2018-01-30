@@ -26,7 +26,6 @@ public class SignInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
@@ -45,7 +44,7 @@ public class SignInActivity extends AppCompatActivity {
         }else{
 
             if (!isProfileNameEmpty()) {
-                Intent intent = new Intent(this, ProfileActivity.class);
+                Intent intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
                 finish();
             }else{

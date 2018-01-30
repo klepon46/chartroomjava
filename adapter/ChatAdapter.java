@@ -12,6 +12,9 @@ import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 
+import javax.microedition.khronos.opengles.GL;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 import id.klepontech.chatroom.R;
 import id.klepontech.chatroom.Utility.Util;
 import id.klepontech.chatroom.model.ChatModel;
@@ -41,6 +44,7 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
     protected void onBindViewHolder(ChatViewHolder holder, int position, ChatModel model) {
         holder.setTxtUsername(model.getName());
         holder.setTxtMessage(model.getMessage());
+        holder.setIvUserChat(model.getUrlPhoto());
         holder.setTvTimestamp(model.getTimeStamp());
         holder.tvIsLocation(View.GONE);
 
@@ -93,9 +97,9 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
             }
 
         } else if (model.getFileModel() != null) {
-            if(modelUserName.equals(userName)){
+            if (modelUserName.equals(userName)) {
                 return RIGHT_MSG_IMG;
-            }else{
+            } else {
                 return LEFT_MSG_IMG;
             }
         } else {
@@ -112,10 +116,11 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
                 System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS);
     }
 
-    public class ChatViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener{
+    public class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView tvUsername, tvMessage, tvLocation, tvTimeStamp;
         ImageView ivChatPhoto;
+        CircleImageView ivUserChat;
 
         public ChatViewHolder(View itemView) {
             super(itemView);
@@ -126,6 +131,7 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
             tvTimeStamp = (TextView) itemView.findViewById(R.id.timestamp);
             tvLocation = (TextView) itemView.findViewById(R.id.tvLocation);
             ivChatPhoto = (ImageView) itemView.findViewById(R.id.img_chat);
+            ivUserChat = itemView.findViewById(R.id.ivUserChat);
         }
 
         public void setTxtUsername(String username) {
@@ -145,6 +151,15 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
             tvTimeStamp.setText(converteTimestamp(timestamp));
         }
 
+        public void setIvUserChat(String urlPhotoUser) {
+            if (ivUserChat == null) return;
+            Glide.with(ivUserChat.getContext())
+                    .load(urlPhotoUser)
+                    .centerCrop()
+                    .override(40,40)
+                    .into(ivUserChat);
+        }
+
         public void setIvChatPhoto(String url) {
             if (ivChatPhoto == null) return;
             Glide.with(ivChatPhoto.getContext()).load(url)
@@ -162,10 +177,10 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
         @Override
         public void onClick(View view) {
             ChatModel model = getItem(getAdapterPosition());
-            if(model.getFileModel() != null){
+            if (model.getFileModel() != null) {
                 mClickListenerChatFirebase.clickImageChat(view, getAdapterPosition(),
-                        userName,"", model.getFileModel().getUrl_file());
-            }else{
+                        userName, "", model.getFileModel().getUrl_file());
+            } else {
                 mClickListenerChatFirebase.clickImageMapChat(view, getAdapterPosition(),
                         model.getMapModel().getLatitude(), model.getMapModel().getLongitude());
             }

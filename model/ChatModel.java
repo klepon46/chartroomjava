@@ -8,6 +8,7 @@ public class ChatModel {
 
     private String name;
     private String message;
+    private String urlPhoto;
     private String timeStamp;
     private MapModel mapModel;
     private FileModel fileModel;
@@ -16,20 +17,29 @@ public class ChatModel {
 
     }
 
+    public ChatModel(String name, String message, String urlPhoto, String timeStamp) {
+        this.name = name;
+        this.message = message;
+        this.urlPhoto = urlPhoto;
+        this.timeStamp = timeStamp;
+    }
+
     public ChatModel(String name, String message, String timeStamp) {
         this.name = name;
         this.message = message;
         this.timeStamp = timeStamp;
     }
 
-    public ChatModel(String name, String timeStamp, MapModel mapModel) {
+    public ChatModel(String name, String urlPhoto, String timeStamp, MapModel mapModel) {
         this.name = name;
+        this.urlPhoto = urlPhoto;
         this.mapModel = mapModel;
         this.timeStamp = timeStamp;
     }
 
-    public ChatModel(String name, String timeStamp, FileModel fileModel) {
+    public ChatModel(String name, String urlPhoto, String timeStamp, FileModel fileModel) {
         this.name = name;
+        this .urlPhoto = urlPhoto;
         this.fileModel = fileModel;
         this.timeStamp = timeStamp;
     }
@@ -72,5 +82,13 @@ public class ChatModel {
 
     public void setTimeStamp(String timeStamp) {
         this.timeStamp = timeStamp;
+    }
+
+    public String getUrlPhoto() {
+        return urlPhoto;
+    }
+
+    public void setUrlPhoto(String urlPhoto) {
+        this.urlPhoto = urlPhoto;
     }
 }
