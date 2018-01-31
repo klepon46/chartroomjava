@@ -6,9 +6,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -18,52 +20,50 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import id.klepontech.chatroom.R;
+import id.klepontech.chatroom.adapter.RoomGridAdapter;
 
 public class MainActivity extends AppCompatActivity {
 
 
     private static final int SIGN_IN_RC = 46;
     private ListView listView;
+    private GridView gridView;
+
     private String name;
 
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private DatabaseReference root = database.getReference().getRoot();
-    private ArrayAdapter<String> arrayAdapter;
-    private ArrayList<String> rooms = new ArrayList();
     private ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main_2);
+
+        gridView = findViewById(R.id.room_grid);
 
         name = getCurrentProfileName();
-
-        setContentView(R.layout.activity_main);
-        listView = (ListView) findViewById(R.id.listView);
-
-        arrayAdapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, rooms);
-        listView.setAdapter(arrayAdapter);
+        final List<String> rooms = new ArrayList<>();
 
         showLoadingDialog();
         root.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Set<String> set = new HashSet<String>();
-                Iterator i = dataSnapshot.getChildren().iterator();
-                while (i.hasNext()) {
-                    set.add(((DataSnapshot) i.next()).getKey());
+                for(DataSnapshot item : dataSnapshot.getChildren()){
+                    rooms.add(item.getKey());
                 }
-                rooms.clear();
-                rooms.addAll(set);
 
-                arrayAdapter.notifyDataSetChanged();
+                gridView.setAdapter(new RoomGridAdapter(MainActivity.this, rooms));
+                dismissDialog();
             }
 
             @Override
@@ -71,16 +71,19 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-        dismissDialog();
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                Intent I = new Intent(getApplicationContext(), ChatRoomActivity.class);
-                I.putExtra("room_name", ((TextView) view).getText().toString());
-                I.putExtra("user_name", name);
-                startActivity(I);
+                TextView room = view.findViewById(R.id.room_name);
+                String roomName = room.getText().toString();
+
+                Intent intent = new Intent(getApplicationContext(), ChatRoomActivity.class);
+                intent.putExtra("room_name", roomName);
+                intent.putExtra("user_name", name);
+                startActivity(intent);
+
             }
         });
 
@@ -103,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
     public void showLoadingDialog() {
         if (dialog == null) {
             dialog = new ProgressDialog(this);
-            dialog.setTitle("Loading");
             dialog.setTitle("Loading...");
         }
 
