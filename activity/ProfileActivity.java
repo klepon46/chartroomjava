@@ -49,6 +49,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
     private SharedPreferences.Editor editor;
 
     private FirebaseStorage storage = FirebaseStorage.getInstance();
+    private String imageProfileName;
 
 
     @Override
@@ -60,6 +61,9 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         SharedPreferences sharedPref = this.getSharedPreferences(sharedPrefKey
                 , Context.MODE_PRIVATE);
         editor = sharedPref.edit();
+
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        imageProfileName = auth.getCurrentUser().getPhoneNumber();
 
         nameText = findViewById(R.id.profile_editText);
         nextButton = findViewById(R.id.profile_btnNext);
@@ -136,16 +140,16 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         progressDialog.setTitle("Set Picture");
         progressDialog.show();
 
-        StorageReference profileGalleryRef = storageReference.child("test");
+        StorageReference profileGalleryRef = storageReference.child(imageProfileName);
         UploadTask uploadTask = profileGalleryRef.putFile(file);
         uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
-               Glide.with(ProfileActivity.this)
-                       .load(file)
-                       .fitCenter()
-                       .into(userImage);
+                Glide.with(ProfileActivity.this)
+                        .load(file)
+                        .fitCenter()
+                        .into(userImage);
 
                 Uri uri = taskSnapshot.getDownloadUrl();
 
