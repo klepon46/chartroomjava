@@ -73,7 +73,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         nextButton.setOnClickListener(this);
         chooseImageButton.setOnClickListener(this);
 
-        String profileImageUrl = getProfileUrl();
+        String profileImageUrl = getPhotoProfileUrl();
         Glide.with(this).load(profileImageUrl).fitCenter().into(userImage);
 
     }
@@ -168,7 +168,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
     }
 
-    private String getProfileUrl() {
+    private String getPhotoProfileUrl() {
 
         String prefName = getResources().getString(R.string.sharedPrefKey);
         String key = getResources().getString(R.string.profileUrlPhotoKey);
