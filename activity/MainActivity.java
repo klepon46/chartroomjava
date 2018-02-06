@@ -10,12 +10,11 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
-import android.widget.ListView;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button btnUpdate;
     private EditText etProfileName;
     private SharedPreferences.Editor editor;
+    private ImageView imgBannerTop;
+    private ImageView imgBannerBottom;
 
     private String name;
     private String imageProfileName;
@@ -62,16 +63,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_3);
+        setContentView(R.layout.activity_nav_drawer);
 
         gridView = findViewById(R.id.room_grid);
         userImage = findViewById(R.id.profile_image);
         etProfileName = findViewById(R.id.profile_editText);
         chooseImageButton = findViewById(R.id.chooseImageButton);
         btnUpdate = findViewById(R.id.profile_btnNext);
+        imgBannerTop = findViewById(R.id.img_banner_top);
+        imgBannerBottom = findViewById(R.id.img_banner_bottom);
 
         chooseImageButton.setOnClickListener(this);
         btnUpdate.setOnClickListener(this);
+
+
 
         String sharedPrefKey = getResources().getString(R.string.sharedPrefKey);
         SharedPreferences sharedPref = this.getSharedPreferences(sharedPrefKey
@@ -120,7 +125,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         etProfileName.setText(name);
         String profileImageUrl = getPhotoProfileUrl();
+
+        String urlBanner = "http://www.limocart.com/img/banner_img1.jpg";
+
         Glide.with(this).load(profileImageUrl).fitCenter().into(userImage);
+        Glide.with(this).load(urlBanner).centerCrop().into(imgBannerTop);
+        Glide.with(this).load(urlBanner).centerCrop().into(imgBannerBottom);
 
     }
 
@@ -137,7 +147,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void onClickChooseImgBtn() {
-
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -151,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editor.putString(key, etProfileName.getText().toString());
         editor.commit();
 
-        Toast.makeText(this,"Name updated",Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Name updated", Toast.LENGTH_SHORT).show();
 
     }
 
