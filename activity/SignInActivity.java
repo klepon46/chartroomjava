@@ -52,9 +52,7 @@ public class SignInActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
-
         }
-
     }
 
     @Override
@@ -68,8 +66,6 @@ public class SignInActivity extends AppCompatActivity {
                 finish();
             }
         }
-
-
     }
 
     private boolean isProfileNameEmpty() {
