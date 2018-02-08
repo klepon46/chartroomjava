@@ -4,10 +4,15 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -43,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final int IMAGE_GALLERY_INTENT_RC = 102;
 
+    private DrawerLayout mDrawerLayout;
     private GridView gridView;
     private CircleImageView userImage;
     private ImageButton chooseImageButton;
@@ -51,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SharedPreferences.Editor editor;
     private ImageView imgBannerTop;
     private ImageView imgBannerBottom;
+    private ActionBarDrawerToggle mDrawerToggle;
 
     private String name;
     private String imageProfileName;
@@ -72,10 +79,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnUpdate = findViewById(R.id.profile_btnNext);
         imgBannerTop = findViewById(R.id.img_banner_top);
         imgBannerBottom = findViewById(R.id.img_banner_bottom);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
 
         chooseImageButton.setOnClickListener(this);
         btnUpdate.setOnClickListener(this);
-
 
 
         String sharedPrefKey = getResources().getString(R.string.sharedPrefKey);
@@ -132,6 +139,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Glide.with(this).load(urlBanner).centerCrop().into(imgBannerTop);
         Glide.with(this).load(urlBanner).centerCrop().into(imgBannerBottom);
 
+        setupDrawer();
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
     }
 
     @Override
@@ -255,5 +266,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return profileName;
     }
 
+    private void setupDrawer() {
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+                R.string.drawer_open, R.string.drawer_close) {
 
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                getSupportActionBar().setTitle("ChatRoom");
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                getSupportActionBar().setTitle("ChatRoom");
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+        };
+
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
+    }
+
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }

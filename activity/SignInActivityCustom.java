@@ -37,7 +37,7 @@ import id.klepontech.chatroom.R;
 
 public class SignInActivityCustom extends AppCompatActivity implements View.OnClickListener {
 
-    private EditText mPhoneNumberField;
+    private EditText mPhoneNumberField, mCountryCodeField;
     private Button mStartButton;
     private ProgressDialog dialog;
 
@@ -53,6 +53,7 @@ public class SignInActivityCustom extends AppCompatActivity implements View.OnCl
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in_custom);
 
+        mCountryCodeField = findViewById(R.id.field_country_code);
         mPhoneNumberField = (EditText) findViewById(R.id.field_phone_number);
         mStartButton = (Button) findViewById(R.id.button_start_verification);
         mStartButton.setOnClickListener(this);
@@ -92,7 +93,11 @@ public class SignInActivityCustom extends AppCompatActivity implements View.OnCl
                     return;
                 }
                 showLoadingDialog();
-                startPhoneNumberVerification(mPhoneNumberField.getText().toString());
+
+                String phoneNumber = mCountryCodeField.getText().toString() +
+                        mPhoneNumberField.getText().toString();
+
+                startPhoneNumberVerification(phoneNumber);
                 break;
         }
     }
@@ -113,7 +118,18 @@ public class SignInActivityCustom extends AppCompatActivity implements View.OnCl
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             Log.d(TAG, "signInWithCredential:success");
-                            startActivity(new Intent(SignInActivityCustom.this, MainActivity.class));
+                            FirebaseUser currentUser = mAuth.getCurrentUser();
+                            if (currentUser != null) {
+                                if (!isProfileNameEmpty()) {
+                                    Intent intent = new Intent(SignInActivityCustom.this, MainActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                } else {
+                                    Intent intent = new Intent(SignInActivityCustom.this, ProfileActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                            }
                             finish();
                         } else {
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
