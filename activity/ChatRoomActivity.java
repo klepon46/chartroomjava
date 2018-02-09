@@ -15,8 +15,10 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -70,7 +72,6 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
     private DatabaseReference mFirebaseDatabaseReference;
     FirebaseStorage storage = FirebaseStorage.getInstance();
 
-
     //Views UI
     private RecyclerView rvListMessage;
     private LinearLayoutManager mLinearLayoutManager;
@@ -78,6 +79,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
     private ImageButton btPopupChatMenu;
     private ChatAdapter adapter;
     private EditText etMessage;
+    private Toolbar toolbar;
 
     private String userName;
     private String roomName;
@@ -98,6 +100,9 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
 
         userName = getIntent().getExtras().get("user_name").toString();
         roomName = getIntent().getExtras().get("room_name").toString();
+        toolbar = findViewById(R.id.toolbar_chat);
+
+        setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         setTitle(roomName);
@@ -110,8 +115,6 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                     .show();
             finish();
         }
-
-
     }
 
     @Override
@@ -127,13 +130,33 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_chat_top, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.sendPhotoCamera:
+                verifyStoragePermissions();
+                break;
+            case R.id.sendLocation:
+                sendLocationIntent();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnSendMessage:
                 sendMessage();
                 break;
             case R.id.btnPopupMenu:
-                showPopupMenu();
+                //showPopupMenu();
+                photoGalleryIntent();
                 break;
         }
     }
@@ -290,7 +313,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                     String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
                     Uri downloadUrl = taskSnapshot.getDownloadUrl();
                     FileModel fileModel = new FileModel("img", downloadUrl.toString(), name, "");
-                    ChatModel chatModel = new ChatModel(userName,getProfileUrl(), timeStamp, fileModel);
+                    ChatModel chatModel = new ChatModel(userName, getProfileUrl(), timeStamp, fileModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
                 }
             });
