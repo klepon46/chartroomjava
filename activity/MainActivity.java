@@ -44,7 +44,8 @@ import id.klepontech.chatroom.R;
 import id.klepontech.chatroom.Utility.Util;
 import id.klepontech.chatroom.adapter.RoomGridAdapter;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,
+        AdapterView.OnItemClickListener {
 
     private static final int IMAGE_GALLERY_INTENT_RC = 102;
 
@@ -72,77 +73,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nav_drawer);
 
-        gridView = findViewById(R.id.room_grid);
-        userImage = findViewById(R.id.profile_image);
-        etProfileName = findViewById(R.id.profile_editText);
-        chooseImageButton = findViewById(R.id.chooseImageButton);
-        btnUpdate = findViewById(R.id.profile_btnNext);
-        imgBannerTop = findViewById(R.id.img_banner_top);
-        imgBannerBottom = findViewById(R.id.img_banner_bottom);
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-
-        chooseImageButton.setOnClickListener(this);
-        btnUpdate.setOnClickListener(this);
-
-
-        String sharedPrefKey = getResources().getString(R.string.sharedPrefKey);
-        SharedPreferences sharedPref = this.getSharedPreferences(sharedPrefKey
-                , Context.MODE_PRIVATE);
-        editor = sharedPref.edit();
-
         FirebaseAuth auth = FirebaseAuth.getInstance();
         imageProfileName = auth.getCurrentUser().getPhoneNumber();
-
         name = getCurrentProfileName();
 
-        final List<String> rooms = new ArrayList<>();
-
-        showLoadingDialog();
-        root.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot item : dataSnapshot.getChildren()) {
-                    rooms.add(item.getKey());
-                }
-
-                gridView.setAdapter(new RoomGridAdapter(MainActivity.this, rooms));
-                dismissDialog();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-                TextView room = view.findViewById(R.id.room_name);
-                String roomName = room.getText().toString();
-
-                Intent intent = new Intent(getApplicationContext(), ChatRoomActivity.class);
-                intent.putExtra("room_name", roomName);
-                intent.putExtra("user_name", name);
-                startActivity(intent);
-
-            }
-        });
-
-        etProfileName.setText(name);
-        String profileImageUrl = getPhotoProfileUrl();
-
-        String urlBanner = "http://www.limocart.com/img/banner_img1.jpg";
-
-        Glide.with(this).load(profileImageUrl).fitCenter().into(userImage);
-        Glide.with(this).load(urlBanner).centerCrop().into(imgBannerTop);
-        Glide.with(this).load(urlBanner).centerCrop().into(imgBannerBottom);
-
+        bindViews();
+        setupSharedPref();
+        populateGridView();
+        populateBanner();
+        populateDrawerUserImageAndName();
         setupDrawer();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+    }
+
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+        TextView room = view.findViewById(R.id.room_name);
+        String roomName = room.getText().toString();
+
+        Intent intent = new Intent(getApplicationContext(), ChatRoomActivity.class);
+        intent.putExtra("room_name", roomName);
+        intent.putExtra("user_name", name);
+        startActivity(intent);
     }
 
     @Override
@@ -225,12 +201,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    private void setupDrawer() {
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+                R.string.drawer_open, R.string.drawer_close) {
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                getSupportActionBar().setTitle("ChatRoom");
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                getSupportActionBar().setTitle("ChatRoom");
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+        };
+
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
+    }
+
     public void showLoadingDialog() {
         if (dialog == null) {
             dialog = new ProgressDialog(this);
-            dialog.setTitle("Loading...");
         }
 
+        dialog.setTitle("Loading...");
         dialog.show();
     }
 
@@ -266,48 +265,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return profileName;
     }
 
-    private void setupDrawer() {
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
-                R.string.drawer_open, R.string.drawer_close) {
+    private void bindViews() {
+        gridView = findViewById(R.id.room_grid);
+        userImage = findViewById(R.id.profile_image);
+        etProfileName = findViewById(R.id.profile_editText);
+        chooseImageButton = findViewById(R.id.chooseImageButton);
+        btnUpdate = findViewById(R.id.profile_btnNext);
+        imgBannerTop = findViewById(R.id.img_banner_top);
+        imgBannerBottom = findViewById(R.id.img_banner_bottom);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
 
-            /** Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-                getSupportActionBar().setTitle("ChatRoom");
-                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+        gridView.setOnItemClickListener(this);
+        chooseImageButton.setOnClickListener(this);
+        btnUpdate.setOnClickListener(this);
+    }
+
+    private void setupSharedPref() {
+        String sharedPrefKey = getResources().getString(R.string.sharedPrefKey);
+        SharedPreferences sharedPref = this.getSharedPreferences(sharedPrefKey
+                , Context.MODE_PRIVATE);
+        editor = sharedPref.edit();
+    }
+
+    private void populateGridView() {
+        final List<String> rooms = new ArrayList<>();
+        showLoadingDialog();
+        root.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot item : dataSnapshot.getChildren()) {
+                    rooms.add(item.getKey());
+                }
+
+                gridView.setAdapter(new RoomGridAdapter(MainActivity.this, rooms));
+                dismissDialog();
             }
 
-            /** Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-                getSupportActionBar().setTitle("ChatRoom");
-                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
             }
-        };
-
-        mDrawerToggle.setDrawerIndicatorEnabled(true);
-        mDrawerLayout.addDrawerListener(mDrawerToggle);
+        });
     }
 
-    @Override
-    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        mDrawerToggle.syncState();
+    private void populateBanner() {
+        String urlBanner = "http://www.limocart.com/img/banner_img1.jpg";
+        Glide.with(this).load(urlBanner).centerCrop().into(imgBannerTop);
+        Glide.with(this).load(urlBanner).centerCrop().into(imgBannerBottom);
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
+    private void populateDrawerUserImageAndName() {
+        etProfileName.setText(name);
+        String profileImageUrl = getPhotoProfileUrl();
+        Glide.with(this).load(profileImageUrl).fitCenter().into(userImage);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }
