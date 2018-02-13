@@ -1,5 +1,6 @@
 package id.klepontech.chatroom.activity;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -39,6 +40,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -80,6 +82,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
     private ChatAdapter adapter;
     private EditText etMessage;
     private Toolbar toolbar;
+    private ProgressDialog dialog;
 
     private String userName;
     private String roomName;
@@ -315,6 +318,17 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                     FileModel fileModel = new FileModel("img", downloadUrl.toString(), name, "");
                     ChatModel chatModel = new ChatModel(userName, getProfileUrl(), timeStamp, fileModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
+                    dismissDialog();
+                }
+            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred())
+                            / taskSnapshot.getTotalByteCount();
+
+                    Log.d(TAG, "onProgress: " + progress);
+
+                    showLoadingDialog((int) progress + " %");
                 }
             });
         } else {
@@ -346,6 +360,14 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
 
                     ChatModel chatModel = new ChatModel(userName, getProfileUrl(), timeStamp, fileModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
+                    dismissDialog();
+                }
+            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred())
+                            / taskSnapshot.getTotalByteCount();
+                    showLoadingDialog((int) progress + " %");
                 }
             });
         } else {
@@ -428,5 +450,21 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         String profileName = sharedRef.getString(key, null);
 
         return profileName;
+    }
+
+    public void showLoadingDialog(String progress) {
+        if (dialog == null) {
+            dialog = new ProgressDialog(this);
+        }
+
+        dialog.setTitle("Loading...");
+        dialog.setMessage(progress);
+        dialog.show();
+    }
+
+    public void dismissDialog() {
+        if (dialog != null && dialog.isShowing()) {
+            dialog.dismiss();
+        }
     }
 }
