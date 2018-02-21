@@ -2,6 +2,7 @@ package id.klepontech.chatroom.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,8 +10,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.firebase.ui.auth.User;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import javax.microedition.khronos.opengles.GL;
 
@@ -18,6 +24,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import id.klepontech.chatroom.R;
 import id.klepontech.chatroom.Utility.Util;
 import id.klepontech.chatroom.model.ChatModel;
+import id.klepontech.chatroom.model.UserModel;
 
 /**
  * Created by garya on 17/01/2018.
@@ -31,7 +38,13 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
     private static final int LEFT_MSG_IMG = 3;
 
     private ClickListenerChatFirebase mClickListenerChatFirebase;
+    private FirebaseDatabase mFirebaseDatabase = FirebaseDatabase.getInstance();
     private String userName;
+    private String profileKey;
+
+    public void setProfileKey(String profileKey) {
+        this.profileKey = profileKey;
+    }
 
     public ChatAdapter(FirebaseRecyclerOptions<ChatModel> options, String userName,
                        ClickListenerChatFirebase mClickListenerChatFirebase) {
@@ -41,7 +54,7 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
     }
 
     @Override
-    protected void onBindViewHolder(ChatViewHolder holder, int position, ChatModel model) {
+    protected void onBindViewHolder(final ChatViewHolder holder, int position, ChatModel model) {
         holder.setTxtUsername(model.getName());
         holder.setTxtMessage(model.getMessage());
         holder.setIvUserChat(model.getUrlPhoto());
@@ -57,6 +70,25 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
         if (model.getFileModel() != null) {
             holder.setIvChatPhoto(model.getFileModel().getUrl_file());
             holder.tvIsLocation(View.GONE);
+        }
+
+        if (model.getProfileKey() != null) {
+            mFirebaseDatabase
+                    .getReference("profiles")
+                    .child(model.getProfileKey())
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            UserModel userModel = dataSnapshot.getValue(UserModel.class);
+                            holder.setIvUserChat(userModel.getUrlPhoto());
+                            holder.setTxtUsername(userModel.getName());
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
         }
 
     }
@@ -86,24 +118,24 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
     @Override
     public int getItemViewType(int position) {
         ChatModel model = getItem(position);
-        String modelUserName = model.getName();
+        String modelProfileKey = model.getProfileKey();
 
         if (model.getMapModel() != null) {
 
-            if (modelUserName.equals(userName)) {
+            if (modelProfileKey.equals(profileKey)) {
                 return RIGHT_MSG_IMG;
             } else {
                 return LEFT_MSG_IMG;
             }
 
         } else if (model.getFileModel() != null) {
-            if (modelUserName.equals(userName)) {
+            if (modelProfileKey.equals(profileKey)) {
                 return RIGHT_MSG_IMG;
             } else {
                 return LEFT_MSG_IMG;
             }
         } else {
-            if (modelUserName.equals(userName)) {
+            if (modelProfileKey.equals(profileKey)) {
                 return RIGHT_MSG;
             } else {
                 return LEFT_MSG;
@@ -156,7 +188,7 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
             Glide.with(ivUserChat.getContext())
                     .load(urlPhotoUser)
                     .centerCrop()
-                    .override(40,40)
+                    .override(40, 40)
                     .into(ivUserChat);
         }
 
