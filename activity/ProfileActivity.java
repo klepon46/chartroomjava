@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,6 +27,8 @@ import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -34,6 +38,7 @@ import java.io.IOException;
 import de.hdodenhof.circleimageview.CircleImageView;
 import id.klepontech.chatroom.R;
 import id.klepontech.chatroom.Utility.Util;
+import id.klepontech.chatroom.model.UserModel;
 
 /**
  * Created by garya on 15/01/2018.
@@ -50,6 +55,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
     private SharedPreferences.Editor editor;
 
     private FirebaseStorage storage = FirebaseStorage.getInstance();
+    private FirebaseAuth auth = FirebaseAuth.getInstance();
     private String imageProfileName;
 
 
@@ -63,7 +69,6 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
                 , Context.MODE_PRIVATE);
         editor = sharedPref.edit();
 
-        FirebaseAuth auth = FirebaseAuth.getInstance();
         imageProfileName = auth.getCurrentUser().getPhoneNumber();
 
         nameText = findViewById(R.id.profile_editText);
@@ -76,7 +81,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
         String profileImageUrl = getPhotoProfileUrl();
 
-        if(!TextUtils.isEmpty(profileImageUrl)) {
+        if (!TextUtils.isEmpty(profileImageUrl)) {
             Glide.with(this).load(profileImageUrl).fitCenter().into(userImage);
         }
 
@@ -99,6 +104,18 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
     private void onClickNextButton() {
 
+        String profileImageUrl = getPhotoProfileUrl();
+        if (TextUtils.isEmpty(profileImageUrl)) {
+            sendDefaultImageToFirebase();
+        }
+
+        UserModel userModel = new UserModel();
+        userModel.setName(nameText.getText().toString());
+        userModel.setPhoneNumber(auth.getCurrentUser().getPhoneNumber());
+        userModel.setUrlPhoto(getPhotoProfileUrl());
+
+        DatabaseReference ref =  FirebaseDatabase.getInstance().getReference().child("profiles");
+        ref.push().setValue(userModel);
 
         String key = getResources().getString(R.string.profileNameKey);
         editor.putString(key, nameText.getText().toString());
@@ -128,7 +145,6 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
                 .child(Util.FOLDER_STORAGE_IMG_PROFILE);
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
-        String phoneNumber = auth.getCurrentUser().getPhoneNumber();
 
         if (requestCode == IMAGE_GALLERY_INTENT_RC) {
             if (resultCode == RESULT_OK) {
@@ -138,6 +154,28 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
+    private void sendDefaultImageToFirebase() {
+
+        StorageReference storageRef = storage.getReferenceFromUrl(Util.URL_STORAGE_REFERENCE)
+                .child(Util.FOLDER_STORAGE_IMG_PROFILE);
+
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+
+        Uri uri = Uri.parse("android.resource://id.klepontech.chatroom/drawable/ic_account_circle");
+
+        StorageReference profileGalleryRef = storageRef.child(imageProfileName);
+        UploadTask uploadTask = profileGalleryRef.putFile(uri);
+        uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Uri uri = taskSnapshot.getDownloadUrl();
+
+                String key = getResources().getString(R.string.profileUrlPhotoKey);
+                editor.putString(key, uri.toString());
+                editor.commit();
+            }
+        });
+    }
 
     private void sendImageToFirebase(StorageReference storageReference, final Uri file) {
 

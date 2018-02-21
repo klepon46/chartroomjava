@@ -36,20 +36,29 @@ import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import id.klepontech.chatroom.BuildConfig;
 import id.klepontech.chatroom.R;
+import id.klepontech.chatroom.Utility.OwnListener;
 import id.klepontech.chatroom.Utility.Util;
 import id.klepontech.chatroom.adapter.ChatAdapter;
 import id.klepontech.chatroom.adapter.ClickListenerChatFirebase;
@@ -86,6 +95,9 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
 
     private String userName;
     private String roomName;
+    private String profileKey;
+
+    private OwnListener ownListener;
 
     private File filePathImageCamera;
 
@@ -101,8 +113,10 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatroom);
 
+        ownListener = new OwnListener();
         userName = getIntent().getExtras().get("user_name").toString();
         roomName = getIntent().getExtras().get("room_name").toString();
+        profileKey = getIntent().getExtras().get("profile_key").toString();
         toolbar = findViewById(R.id.toolbar_chat);
 
         setSupportActionBar(toolbar);
@@ -118,6 +132,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                     .show();
             finish();
         }
+
     }
 
     @Override
@@ -171,8 +186,12 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
 
         String urlPhoto = getProfileUrl();
         String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
-        ChatModel model = new ChatModel(userName, etMessage.getText().toString()
-                , urlPhoto, timeStamp);
+//        ChatModel model = new ChatModel(userName, etMessage.getText().toString()
+//                , urlPhoto, timeStamp);
+
+        ChatModel model = new ChatModel(profileKey, etMessage.getText().toString(),
+                timeStamp);
+        model.setName(userName);
 
         mFirebaseDatabaseReference.push().setValue(model);
         etMessage.setText(null);
@@ -395,7 +414,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
     private void initializeFirebase() {
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance()
-                .getReference().child(roomName);
+                .getReference().child("rooms").child(roomName);
 
         Query query = mFirebaseDatabaseReference.orderByKey();
 
@@ -418,6 +437,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                 }
             }
         });
+        adapter.setProfileKey(profileKey);
 
         rvListMessage.setLayoutManager(new LinearLayoutManager(this));
         rvListMessage.setAdapter(adapter);
@@ -466,5 +486,15 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         if (dialog != null && dialog.isShowing()) {
             dialog.dismiss();
         }
+    }
+
+    private void getProfileKey() {
+
+        String phoneNumber = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("profiles");
+        ref.orderByChild("phoneNumber")
+                .equalTo(phoneNumber)
+                .addListenerForSingleValueEvent(ownListener);
     }
 }

@@ -41,6 +41,7 @@ import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import id.klepontech.chatroom.R;
+import id.klepontech.chatroom.Utility.OwnListener;
 import id.klepontech.chatroom.Utility.Util;
 import id.klepontech.chatroom.adapter.RoomGridAdapter;
 
@@ -64,9 +65,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String imageProfileName;
 
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private DatabaseReference root = database.getReference().getRoot();
+    private DatabaseReference root = database.getReference().getRoot().child("rooms");
     private FirebaseStorage storage = FirebaseStorage.getInstance();
     private ProgressDialog dialog;
+    private OwnListener ownListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         populateBanner();
         populateDrawerUserImageAndName();
         setupDrawer();
+        getProfileKey();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
@@ -118,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(getApplicationContext(), ChatRoomActivity.class);
         intent.putExtra("room_name", roomName);
         intent.putExtra("user_name", name);
+        intent.putExtra("profile_key", ownListener.getKey());
         startActivity(intent);
     }
 
@@ -274,6 +278,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imgBannerTop = findViewById(R.id.img_banner_top);
         imgBannerBottom = findViewById(R.id.img_banner_bottom);
         mDrawerLayout = findViewById(R.id.drawer_layout);
+        ownListener = new OwnListener();
 
         gridView.setOnItemClickListener(this);
         chooseImageButton.setOnClickListener(this);
@@ -318,6 +323,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         etProfileName.setText(name);
         String profileImageUrl = getPhotoProfileUrl();
         Glide.with(this).load(profileImageUrl).fitCenter().into(userImage);
+    }
+
+    private void getProfileKey() {
+
+        String phoneNumber = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+
+        DatabaseReference ref =  database.getReference().child("profiles");
+
+        ref.orderByChild("phoneNumber")
+                .equalTo(phoneNumber)
+                .addListenerForSingleValueEvent(ownListener);
     }
 
 }
