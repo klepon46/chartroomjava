@@ -22,13 +22,19 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.firebase.ui.auth.User;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -37,6 +43,7 @@ import java.io.IOException;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import id.klepontech.chatroom.R;
+import id.klepontech.chatroom.Utility.OwnListener;
 import id.klepontech.chatroom.Utility.Util;
 import id.klepontech.chatroom.model.UserModel;
 
@@ -53,6 +60,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
     private ImageButton chooseImageButton;
     private CircleImageView userImage;
     private SharedPreferences.Editor editor;
+    private OwnListener ownListener;
 
     private FirebaseStorage storage = FirebaseStorage.getInstance();
     private FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -71,6 +79,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
         imageProfileName = auth.getCurrentUser().getPhoneNumber();
 
+        ownListener = new OwnListener();
         nameText = findViewById(R.id.profile_editText);
         nextButton = findViewById(R.id.profile_btnNext);
         chooseImageButton = findViewById(R.id.chooseImageButton);
@@ -79,12 +88,8 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         nextButton.setOnClickListener(this);
         chooseImageButton.setOnClickListener(this);
 
-        String profileImageUrl = getPhotoProfileUrl();
-
-        if (!TextUtils.isEmpty(profileImageUrl)) {
-            Glide.with(this).load(profileImageUrl).fitCenter().into(userImage);
-        }
-
+        sendDefaultImageToFirebase();
+        getProfileKey();
 
     }
 
@@ -104,18 +109,44 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
     private void onClickNextButton() {
 
-        String profileImageUrl = getPhotoProfileUrl();
-        if (TextUtils.isEmpty(profileImageUrl)) {
-            sendDefaultImageToFirebase();
+        if (TextUtils.isEmpty(nameText.getText().toString())) {
+            Toast.makeText(this, "Name cannot be null", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        UserModel userModel = new UserModel();
+        final UserModel userModel = new UserModel();
         userModel.setName(nameText.getText().toString());
         userModel.setPhoneNumber(auth.getCurrentUser().getPhoneNumber());
         userModel.setUrlPhoto(getPhotoProfileUrl());
 
-        DatabaseReference ref =  FirebaseDatabase.getInstance().getReference().child("profiles");
-        ref.push().setValue(userModel);
+        final DatabaseReference ref = FirebaseDatabase
+                .getInstance()
+                .getReference()
+                .child("profiles");
+
+        Query query = ref.orderByChild("phoneNumber")
+                .equalTo(auth.getCurrentUser().getPhoneNumber());
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    FirebaseDatabase.getInstance().getReference().child("profiles")
+                            .child(ownListener.getKey()).setValue(userModel);
+
+                } else {
+                    ref.push().setValue(userModel);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+        //ref.push().setValue(userModel);
 
         String key = getResources().getString(R.string.profileNameKey);
         editor.putString(key, nameText.getText().toString());
@@ -158,8 +189,6 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
         StorageReference storageRef = storage.getReferenceFromUrl(Util.URL_STORAGE_REFERENCE)
                 .child(Util.FOLDER_STORAGE_IMG_PROFILE);
-
-        FirebaseAuth auth = FirebaseAuth.getInstance();
 
         Uri uri = Uri.parse("android.resource://id.klepontech.chatroom/drawable/ic_account_circle");
 
@@ -222,5 +251,15 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         String profileName = sharedRef.getString(key, null);
 
         return profileName;
+    }
+
+    private void getProfileKey() {
+
+        String phoneNumber = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("profiles");
+        ref.orderByChild("phoneNumber")
+                .equalTo(phoneNumber)
+                .addListenerForSingleValueEvent(ownListener);
     }
 }

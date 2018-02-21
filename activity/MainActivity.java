@@ -147,6 +147,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void onClickNextButton() {
 
+        FirebaseDatabase.getInstance().getReference().child("profiles")
+                .child(ownListener.getKey()).child("name")
+                .setValue(etProfileName.getText().toString());
+
         String key = getResources().getString(R.string.profileNameKey);
         editor.putString(key, etProfileName.getText().toString());
         editor.commit();
@@ -188,6 +192,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .into(userImage);
 
                 Uri uri = taskSnapshot.getDownloadUrl();
+
+                FirebaseDatabase.getInstance().getReference().child("profiles")
+                        .child(ownListener.getKey()).child("urlPhoto").setValue(uri.toString());
+
 
                 String key = getResources().getString(R.string.profileUrlPhotoKey);
                 editor.putString(key, uri.toString());
@@ -329,7 +337,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         String phoneNumber = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
 
-        DatabaseReference ref =  database.getReference().child("profiles");
+        DatabaseReference ref = database.getReference().child("profiles");
 
         ref.orderByChild("phoneNumber")
                 .equalTo(phoneNumber)
