@@ -55,7 +55,6 @@ public class ChatAdapter extends FirebaseRecyclerAdapter<ChatModel, ChatAdapter.
 
     @Override
     protected void onBindViewHolder(final ChatViewHolder holder, int position, ChatModel model) {
-        holder.setTxtUsername(model.getName());
         holder.setTxtMessage(model.getMessage());
         holder.setIvUserChat(model.getUrlPhoto());
         holder.setTvTimestamp(model.getTimeStamp());

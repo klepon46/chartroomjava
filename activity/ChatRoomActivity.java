@@ -184,14 +184,10 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
             return;
         }
 
-        String urlPhoto = getProfileUrl();
         String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
-//        ChatModel model = new ChatModel(userName, etMessage.getText().toString()
-//                , urlPhoto, timeStamp);
 
         ChatModel model = new ChatModel(profileKey, etMessage.getText().toString(),
                 timeStamp);
-        model.setName(userName);
 
         mFirebaseDatabaseReference.push().setValue(model);
         etMessage.setText(null);
@@ -290,7 +286,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                             new MapModel(latLng.latitude + "", latLng.longitude + "");
 
                     ChatModel chatModel =
-                            new ChatModel(userName, getProfileUrl(), timeStamp, mapModel);
+                            new ChatModel(profileKey, timeStamp, mapModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
                 }
             }
@@ -335,7 +331,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                     String timeStamp = String.valueOf(Calendar.getInstance().getTime().getTime());
                     Uri downloadUrl = taskSnapshot.getDownloadUrl();
                     FileModel fileModel = new FileModel("img", downloadUrl.toString(), name, "");
-                    ChatModel chatModel = new ChatModel(userName, getProfileUrl(), timeStamp, fileModel);
+                    ChatModel chatModel = new ChatModel(profileKey, timeStamp, fileModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
                     dismissDialog();
                 }
@@ -377,7 +373,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                     FileModel fileModel = new FileModel("img", downloadUrl.toString()
                             , file.getName(), file.length() + "");
 
-                    ChatModel chatModel = new ChatModel(userName, getProfileUrl(), timeStamp, fileModel);
+                    ChatModel chatModel = new ChatModel(profileKey, timeStamp, fileModel);
                     mFirebaseDatabaseReference.push().setValue(chatModel);
                     dismissDialog();
                 }

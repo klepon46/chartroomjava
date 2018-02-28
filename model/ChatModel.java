@@ -14,7 +14,7 @@ public class ChatModel {
     private MapModel mapModel;
     private FileModel fileModel;
 
-    public ChatModel(){
+    public ChatModel() {
 
     }
 
@@ -25,27 +25,19 @@ public class ChatModel {
         this.timeStamp = timeStamp;
     }
 
-//    public ChatModel(String name, String message, String timeStamp) {
-//        this.name = name;
-//        this.message = message;
-//        this.timeStamp = timeStamp;
-//    }
-
-    public ChatModel(String name, String urlPhoto, String timeStamp, MapModel mapModel) {
-        this.name = name;
-        this.urlPhoto = urlPhoto;
+    public ChatModel(String profileKey, String timeStamp, MapModel mapModel) {
+        this.profileKey = profileKey;
         this.mapModel = mapModel;
         this.timeStamp = timeStamp;
     }
 
-    public ChatModel(String name, String urlPhoto, String timeStamp, FileModel fileModel) {
-        this.name = name;
-        this .urlPhoto = urlPhoto;
+    public ChatModel(String profileKey, String timeStamp, FileModel fileModel) {
+        this.profileKey = profileKey;
         this.fileModel = fileModel;
         this.timeStamp = timeStamp;
     }
 
-    public ChatModel(String profileKey, String message, String timeStamp){
+    public ChatModel(String profileKey, String message, String timeStamp) {
         this.profileKey = profileKey;
         this.message = message;
         this.timeStamp = timeStamp;

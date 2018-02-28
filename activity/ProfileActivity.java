@@ -88,7 +88,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         nextButton.setOnClickListener(this);
         chooseImageButton.setOnClickListener(this);
 
-        sendDefaultImageToFirebase();
+        //sendDefaultImageToFirebase();
         getProfileKey();
 
     }
@@ -111,6 +111,11 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
         if (TextUtils.isEmpty(nameText.getText().toString())) {
             Toast.makeText(this, "Name cannot be null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(getPhotoProfileUrl())) {
+            Toast.makeText(this, "Profile photo cannot be null", Toast.LENGTH_SHORT).show();
             return;
         }
 

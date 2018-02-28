@@ -81,7 +81,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         bindViews();
         setupSharedPref();
-        populateGridView();
         populateBanner();
         populateDrawerUserImageAndName();
         setupDrawer();
@@ -89,6 +88,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        populateGridView();
     }
 
     @Override
